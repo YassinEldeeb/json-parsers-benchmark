@@ -48,7 +48,7 @@ fn generate_readme(
     go_output: &str,
 ) -> String {
     format!(
-        "# JSON Parsers benchmark Results\n\n\
+        "# JSON Parsers Benchmark\n\n\
         | Benchmark | Time (in µs) |\n\
         |-----------|------|\n\
         {}\n\n\
