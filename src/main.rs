@@ -38,10 +38,7 @@ fn get_command_output(command: &str, args: Vec<&str>, dir: Option<&str>) -> Stri
 fn extract_benchmarks(rust_output: &str, go_output: &str) -> Vec<(String, f64)> {
     let mut benchmarks = Vec::new();
     extract_time_from_rust_output(rust_output, &mut benchmarks);
-    if let Some(time) = extract_time_from_go_output(go_output) {
-        let time = convert_nanoseconds_to_microseconds(&time);
-        benchmarks.push(("Go - jsonparser".to_string(), time));
-    }
+    extract_time_from_go_output(go_output, &mut benchmarks);
     benchmarks
 }
 
@@ -139,20 +136,19 @@ fn extract_time_from_rust_output(output: &str, benchmarks: &mut Vec<(String, f64
     }
 }
 
-fn extract_time_from_go_output(output: &str) -> Option<String> {
-    let re = Regex::new(r"BenchmarkJsonParser-\d+\s+\d+\s+([\d.]+)\s+ns/op").unwrap();
-    if let Some(captures) = re.captures(output) {
-        let time = captures.get(1).unwrap().as_str();
-        return Some(format!("{} ns/op", time));
-    }
-    None
-}
+fn extract_time_from_go_output(output: &str, benchmarks: &mut Vec<(String, f64)>) {
+    // Updated regex to match benchmark names and times
+    let re = Regex::new(r"Benchmark(\w+)\s+-?\d+\s+([\d.]+)\s+ns/op").unwrap();
 
-fn convert_nanoseconds_to_microseconds(input: &str) -> f64 {
-    let cleaned_input = input.trim_end_matches(" ns/op");
-
-    if let Ok(ns) = cleaned_input.parse::<f64>() {
-        return ns / 1000.0; // Convert ns to µs
+    for captures in re.captures_iter(output) {
+        let benchmark = captures.get(1).unwrap().as_str();
+        let time = captures
+            .get(2)
+            .unwrap()
+            .as_str()
+            .parse::<f64>()
+            .unwrap_or(f64::MAX);
+        let time_in_microseconds = time / 1000.0; // Convert ns to µs
+        benchmarks.push((format!("Go - {}", benchmark), time_in_microseconds));
     }
-    f64::MAX // Invalid input
 }

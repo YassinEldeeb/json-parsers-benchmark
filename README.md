@@ -40,8 +40,8 @@ Found 6 outliers among 100 measurements (6.00%)
 Go Benchmark Output:
 
 ```shell
-goos: linux
-goarch: amd64
+goos: darwin
+goarch: arm64
 pkg: my-project
 cpu: AMD EPYC 7763 64-Core Processor                
 BenchmarkJsonParser   	    9142	    130601 ns/op
