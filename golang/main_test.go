@@ -1,19 +1,20 @@
 package main
 
 import (
-    "testing"
-    "runtime"
+    "encoding/json"
     "github.com/buger/jsonparser"
     "io/ioutil"
+    "runtime"
+    "testing"
     "fmt"
 )
 
-func readJSONFile(filename string) (string, error) {
+func readJSONFile(filename string) ([]byte, error) {
     jsonBytes, err := ioutil.ReadFile(filename)
     if err != nil {
-        return "", err
+        return nil, err
     }
-    return string(jsonBytes), nil
+    return jsonBytes, nil
 }
 
 
@@ -36,4 +37,26 @@ func BenchmarkJsonParser(b *testing.B) {
         }
     }
     b.StopTimer()
+}
+
+func BenchmarkEncodingJson(b *testing.B) {
+    jsonBytes, err := readJSONFile("../benches/data.json")
+    if err != nil {
+        b.Fatalf("Failed to read JSON file: %v", err)
+    }
+
+    var jsonData map[string]interface{}
+
+    runtime.GC() // Run garbage collection before starting the benchmark
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        if err := json.Unmarshal(jsonBytes, &jsonData); err != nil {
+            b.Fatal(err)
+        }
+        // Access the nested "users" key
+        _, ok := jsonData["data"].(map[string]interface{})["users"]
+        if !ok {
+            b.Fatal("Failed to access 'users' key")
+        }
+    }
 }

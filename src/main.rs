@@ -27,6 +27,10 @@ fn get_command_output(command: &str, args: Vec<&str>, dir: Option<&str>) -> Stri
     if let Some(directory) = dir {
         command.current_dir(directory);
     }
+
+    if command.get_program() == "go" {
+        command.env("GOMAXPROCS", "1"); // use only 1 thread like rust's criterion
+    }
     let output = command.output().expect("Failed to execute command").stdout;
     String::from_utf8_lossy(&output).into_owned()
 }
